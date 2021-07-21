@@ -2,6 +2,7 @@ from spyne import Application, ServiceBase, Unicode, rpc
 from spyne.protocol.soap import Soap11
 from spyne.server.wsgi import WsgiApplication
 import asyncio
+import json
 from aiohttp import ClientSession
 
 async def getOpenWeatherMapInfo(latitud, longitud):
@@ -10,29 +11,42 @@ async def getOpenWeatherMapInfo(latitud, longitud):
         apiUrl = f'https://api.openweathermap.org/data/2.5/weather?lat={latitud}&lon={longitud}&appid={appId}'
         async with session.get(apiUrl) as response:
             response = await response.read()
-            print(response)
+            my_json = response.decode('utf8').replace("'", '"')
+            data = json.loads(my_json)
+            return data
 
 class Clima(ServiceBase):
 
-    @rpc(float, float, _returns= {}) 
-    def temperatura(ctx, latitud: float, longitud: float) -> {}:
-        return a+b
-    
-    @rpc(float, float, _returns= {})
-    def viento(ctx, latitud: float, longitud: float) -> {}:
-        return a-b
+    @rpc(float, float, _returns= str) 
+    def temperatura(ctx, latitud: float, longitud: float) -> str:
+        response = asyncio.get_event_loop().run_until_complete(getOpenWeatherMapInfo(latitud,longitud))
+        data = '{"temp":'+ str(response["main"]["temp"]) +',"temp_min":' +str(response["main"]["temp_min"]) +',"temp_max":' +str(response["main"]["temp_max"])+'}'
+        return data
+        
 
-    @rpc(float, float, _returns= float)
-    def humedad(ctx, latitud: float, longitud: float) -> float:
-        return a*b
+    @rpc(float, float, _returns= str)
+    def viento(ctx, latitud: float, longitud: float) -> str:
+        response = asyncio.get_event_loop().run_until_complete(getOpenWeatherMapInfo(latitud,longitud))
+        data = '{"velocidad":'+ str(response["wind"]["speed"]) +',"direccion":' +str(response["wind"]["deg"])+'}'
+        return data
 
-    @rpc(float, float, _returns= float)
-    def presion(ctx,  latitud: float, longitud: float) -> float:
-        return latitud
+    @rpc(float, float, _returns= str)
+    def humedad(ctx, latitud: float, longitud: float) -> str:
+        response = asyncio.get_event_loop().run_until_complete(getOpenWeatherMapInfo(latitud,longitud))
+        data = '{"humedad":'+ str(response["main"]["humidity"]) +'}'
+        return data
 
-    @rpc(float, float, _returns= float)
-    def visibilidad(ctx, latitud:float, longitud:float) -> float:
-        return latitud
+    @rpc(float, float, _returns= str)
+    def presion(ctx,  latitud: float, longitud: float) -> str:
+        response = asyncio.get_event_loop().run_until_complete(getOpenWeatherMapInfo(latitud,longitud))
+        data = '{"presion":'+ str(response["main"]["pressure"]) +'}'
+        return data
+
+    @rpc(float, float, _returns= str)
+    def visibilidad(ctx, latitud:float, longitud:float) -> str:
+        response = asyncio.get_event_loop().run_until_complete(getOpenWeatherMapInfo(latitud,longitud))
+        data = '{"visibilidad":'+ str(response["visibility"]) +'}'
+        return data
 
 application = Application(
     services=[Clima],
@@ -43,7 +57,6 @@ application = Application(
 application = WsgiApplication(application)
 
 if __name__ == '__main__':
-    '''
     import logging
 
     from wsgiref.simple_server import make_server
@@ -56,6 +69,5 @@ if __name__ == '__main__':
 
     server = make_server('127.0.0.1', 8000, application)
     server.serve_forever()
-    '''
-    asyncio.get_event_loop().run_until_complete(getOpenWeatherMapInfo(10.25,20.1))
+    
     
