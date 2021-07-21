@@ -1,7 +1,9 @@
 # weather-async-API
 ## Integrantes
--Bedregal Vento, Adrian\n
--Flores Herrera, Jefferson\n
+-Bedregal Vento, Adrian
+
+-Flores Herrera, Jefferson
+
 -Paredes Escobedo, Fernanda
 
 -Pinto Medina, Brian 
